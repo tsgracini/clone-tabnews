@@ -1,19 +1,11 @@
 import database from "infra/database.js";
 
-beforeAll(cleanDatabase);
+import orchestrator from "tests/orchestrator.js";
 
-async function cleanDatabase() {
-  await database.query("drop schema public cascade; create schema public;");
-}
-
-async function verifyIfMigrationsIsRunning() {
-  const tableResult = await database.query(
-    "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'pgmigrations');",
-  );
-  const tableExists = tableResult.rows[0].exists;
-
-  return tableExists;
-}
+beforeAll(async () => {
+  await orchestrator.waitForAllServices();
+  await database.query("drop schema public cascade; create schema public");
+});
 
 test("POST to /api/v1/migrations should return 200", async () => {
   const response1 = await fetch("http://localhost:3000/api/v1/migrations", {
